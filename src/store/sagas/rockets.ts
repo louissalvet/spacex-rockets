@@ -8,6 +8,11 @@ import {
 import { spacexClient } from 'apis'
 import { AppState } from 'store'
 
+interface GraphQLRocketsQueryResponse {
+  rockets: {
+    [field: string]: Exclude<any, {} | []>
+  }[]
+}
 function* fetchRockets() {
   const selector = (state: AppState) =>
     Object.entries(state.fields.data).reduce(
@@ -15,10 +20,10 @@ function* fetchRockets() {
       [] as string[]
     )
 
-  const fields = yield select(selector)
+  const fields: string[] = yield select(selector)
 
   try {
-    const { data }: { data: { rockets: {}[] } | null } = yield call(
+    const { data }: { data: GraphQLRocketsQueryResponse | null } = yield call(
       [spacexClient, spacexClient.query],
       {
         query: gql`
@@ -32,9 +37,12 @@ function* fetchRockets() {
       }
     )
 
+    const rockets =
+      data?.rockets?.map?.(({ __typename, ...rocket }) => rocket) || null
+
     yield put({
       type: FetchRocketsActionTypes.success,
-      payload: data?.rockets || []
+      payload: rockets
     })
   } catch (err) {
     yield put({ type: FetchRocketsActionTypes.failure })

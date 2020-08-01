@@ -4,21 +4,21 @@ import gql from 'graphql-tag'
 import { FetchFieldsActionTypes, FetchRocketsActionTypes } from '../actions'
 import { spacexClient } from 'apis'
 
-function* fetchFields() {
-  interface Data {
-    __type: {
+interface GraphQLFieldsQueryResponse {
+  __type: {
+    __typename: string
+    fields: {
+      name: string
+      type: {
+        kind: string
+      }
       __typename: string
-      fields: {
-        name: string
-        type: {
-          kind: string
-        }
-        __typename: string
-      }[]
-    }
+    }[]
   }
+}
+function* fetchFields() {
   try {
-    const { data }: { data: Data | null } = yield call(
+    const { data }: { data: GraphQLFieldsQueryResponse | null } = yield call(
       [spacexClient, spacexClient.query],
       {
         query: gql`
@@ -36,9 +36,9 @@ function* fetchFields() {
       }
     )
 
-    if (!data) throw Error('Missing data')
+    if (!data) throw Error('Cannot fetch available fields')
 
-    const payload = data.__type.fields.reduce(
+    const fields = data.__type.fields.reduce(
       (acc, cur) => ({
         ...acc,
         ...(cur.type.kind === 'SCALAR' && { [cur.name]: false })
@@ -47,8 +47,8 @@ function* fetchFields() {
     )
 
     yield all([
-      put({ type: FetchFieldsActionTypes.success, payload: payload }),
-      put({ type: FetchRocketsActionTypes.trigger, payload: [] })
+      put({ type: FetchFieldsActionTypes.success, payload: fields }),
+      put({ type: FetchRocketsActionTypes.trigger })
     ])
   } catch {
     yield put({ type: FetchFieldsActionTypes.failure })

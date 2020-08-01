@@ -3,9 +3,15 @@ import { Reducer, combineReducers } from 'redux'
 import { FetchRocketsActionTypes, FetchRocketsSuccessAction } from '../actions'
 import { createRequestReducer } from '../utils'
 
-type Data = any[]
+type Data =
+  | {
+      id: string
+      __typename: string
+      [field: string]: Exclude<any, {} | []>
+    }[]
+  | null
 
-const initialDataState: Data = []
+const initialDataState: Data = null
 
 type Action = FetchRocketsSuccessAction
 
@@ -18,7 +24,7 @@ const dataReducer: Reducer<Data, Action> = (
       return [...action.payload]
 
     default:
-      return [...state]
+      return state
   }
 }
 
