@@ -3,10 +3,9 @@ import styled from 'styled-components'
 
 interface Props {
   id: string
-  __typename: string
   [key: string]: any
 }
-const Rocket: FC<Props> = ({ id, __typename, ...rest }) => {
+const Rocket: FC<Props> = ({ id, ...rest }) => {
   return (
     <Wrapper>
       <img
